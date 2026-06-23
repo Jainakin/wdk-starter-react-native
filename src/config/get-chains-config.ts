@@ -13,8 +13,10 @@
 // limitations under the License.
 
 import { NetworkMode } from '@/services/network-mode-service';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export type SparkNetworkMode = 'MAINNET' | 'TESTNET' | 'REGTEST';
+export type RgbLightningNetworkMode = 'mainnet' | 'testnet' | 'regtest' | 'signet';
 
 type ChainConfig = {
   chainId: number;
@@ -27,13 +29,32 @@ type ChainConfig = {
   safeModulesVersion?: string;
   paymasterToken?: { address: string };
   transferMaxFee?: number;
-  network?: SparkNetworkMode;
+  network?: SparkNetworkMode | RgbLightningNetworkMode;
+  dataDir?: string;
+  daemonListeningPort?: number;
+  ldkPeerListeningPort?: number;
+  maxMediaUploadSizeMb?: number;
+  enableVirtualChannelsV0?: boolean;
+  virtualPeerPubkeys?: string[];
+  permissiveSignerPolicy?: boolean;
 };
 
 const MAINNET_CHAINS: string[] = ['ethereum', 'polygon', 'arbitrum', 'spark', 'plasma'];
 const TESTNET_CHAINS: string[] = ['sepolia', 'spark'];
 
+const documentDirectory = FileSystem.documentDirectory?.replace(/^file:\/\//, '') ?? '';
+const appPrivatePath = (name: string) => `${documentDirectory}${name}`;
+const envValue = (fallback: string, ...keys: string[]) => {
+  const env = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+  return keys.map((key) => env[key]).find(Boolean) ?? fallback;
+};
+
 const getChainsConfig = (sparkNetwork: SparkNetworkMode = 'MAINNET', networkMode?: NetworkMode): Record<string, ChainConfig> => {
+  const rgbLightningNetwork = envValue(
+    'regtest',
+    'EXPO_PUBLIC_RGB_LIGHTNING_NETWORK',
+    'EXPO_PUBLIC_RGB_NETWORK'
+  ) as RgbLightningNetworkMode;
   const allChains: Record<string, ChainConfig> = {
     sepolia: {
       chainId: 11155111,
@@ -106,6 +127,16 @@ const getChainsConfig = (sparkNetwork: SparkNetworkMode = 'MAINNET', networkMode
         address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
       },
       transferMaxFee: 100000,
+    },
+    'rgb-lightning': {
+      chainId: 100000,
+      blockchain: 'rgb-lightning',
+      network: rgbLightningNetwork,
+      dataDir: appPrivatePath(`rgb-lightning-${rgbLightningNetwork}`),
+      daemonListeningPort: 0,
+      ldkPeerListeningPort: 0,
+      maxMediaUploadSizeMb: 5,
+      permissiveSignerPolicy: true,
     },
   };
 

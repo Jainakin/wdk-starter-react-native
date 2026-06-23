@@ -24,7 +24,7 @@ import {
   QrCode,
   Settings,
   Shield,
-  Star,
+  Zap,
 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -57,12 +57,23 @@ type AggregatedBalance = ({
   config: AssetConfig;
 } | null)[];
 
+type Suggestion = {
+  id: number;
+  icon: typeof Zap;
+  title: string;
+  color: string;
+  route?: string;
+  url?: string;
+};
+
 export default function WalletScreen() {
   const insets = useSafeAreaInsets();
   const router = useDebouncedNavigation();
   const { wallets, activeWalletId } = useWalletManager();
-  const currentWalletId = activeWalletId || wallets[0]?.identifier || 'default';
-  const { isInitialized, addresses } = useWallet({ walletId: currentWalletId });
+  const currentWalletId = activeWalletId || wallets[0]?.identifier;
+  const { isInitialized, addresses } = useWallet(
+    currentWalletId ? { walletId: currentWalletId } : undefined
+  );
   const { mutate: refreshBalance } = useRefreshBalance();
 
   const [networkMode, setNetworkMode] = useState<NetworkMode | null>(null);
@@ -177,13 +188,13 @@ export default function WalletScreen() {
     extrapolate: 'clamp',
   });
 
-  const suggestions = [
+  const suggestions: Suggestion[] = [
     {
       id: 1,
-      icon: Star,
-      title: 'Star repo on GitHub',
+      icon: Zap,
+      title: 'RGB Lightning',
       color: colors.primary,
-      url: 'https://github.com/tetherto/wdk-starter-react-native',
+      route: '/rgb-lightning',
     },
     {
       id: 2,
@@ -419,7 +430,14 @@ export default function WalletScreen() {
             {suggestions.map((suggestion) => (
               <TouchableOpacity
                 onPress={() => {
-                  Linking.openURL(suggestion.url);
+                  if (suggestion.route) {
+                    router.push(suggestion.route);
+                    return;
+                  }
+
+                  if (suggestion.url) {
+                    Linking.openURL(suggestion.url);
+                  }
                 }}
                 key={suggestion.id}
                 style={styles.suggestionCard}

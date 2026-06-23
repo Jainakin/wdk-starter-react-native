@@ -21,8 +21,10 @@ import { colors } from '@/constants/colors';
 
 export default function Index() {
   const { wallets, activeWalletId, refreshWalletList } = useWalletManager();
-  const currentWalletId = activeWalletId || wallets[0]?.identifier || 'default';
-  const { isInitialized } = useWallet({ walletId: currentWalletId });
+  const currentWalletId = activeWalletId || wallets[0]?.identifier;
+  const { isInitialized } = useWallet(
+    currentWalletId ? { walletId: currentWalletId } : undefined
+  );
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {

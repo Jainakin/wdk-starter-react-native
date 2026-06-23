@@ -1,0 +1,30 @@
+name: build
+
+on:
+  push:
+    branches: [main, develop, workflow-fix]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node 22.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.19.0"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install bare
+        run: npm install -g bare
+
+      - name: Lint code with standard
+        run: npm run lint

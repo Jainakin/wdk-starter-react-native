@@ -1,0 +1,82 @@
+name: publish
+
+on:
+  # Allow calling this workflow from other workflows (local tests with act)
+  workflow_call:
+    inputs:
+      dry_run:
+        type: boolean
+        required: false
+        default: true
+    secrets:
+      NPM_TOKEN:
+        required: false
+
+  push:
+    tags:
+      - "v*.*.*"
+  release:
+    types: [published]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.19.0"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Lint Standard
+        run: npm run lint
+      - name: Install bare
+        run: npm install -g bare
+
+      - run: npm run gen:schema
+      - run: npm run gen:bundle
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: worklet-bundle
+          path: |
+            bundle/worklet.bundle.mjs
+            bundle/worklet.bundle.d.mts
+          if-no-files-found: error
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node 22.19.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.19.0"
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Dry-run when invoked via workflow_call with dry_run=true
+      - name: Publish to npm (dry-run)
+        if: ${{ github.event_name != 'release' && inputs.dry_run }}
+        run: npm publish --dry-run
+
+      - run: npm pack # optional: sanity check the tarball contents
+        if: ${{ github.event_name == 'release' || !inputs.dry_run }}
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
