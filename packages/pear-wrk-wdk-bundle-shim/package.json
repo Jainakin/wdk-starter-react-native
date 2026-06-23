@@ -1,0 +1,28 @@
+{
+  "name": "@tetherto/pear-wrk-wdk",
+  "version": "1.0.0-beta.8-bundle-shim",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./index.js"
+    },
+    "./package": {
+      "default": "./package.json"
+    },
+    "./package.json": "./package.json",
+    "./src/hrpc": {
+      "types": "./types/hrpc.d.ts",
+      "default": "./hrpc.js"
+    },
+    "./types/rpc": {
+      "types": "./types/rpc.d.ts"
+    },
+    "./worklet": {
+      "default": "./worklet.js"
+    }
+  },
+  "dependencies": {
+    "@tetherto/pear-wrk-wdk-base": "npm:@tetherto/pear-wrk-wdk@1.0.0-beta.8"
+  }
+}

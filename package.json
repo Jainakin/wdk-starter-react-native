@@ -17,9 +17,9 @@
     "typecheck": "tsc --noEmit",
     "prebuild": "expo prebuild",
     "prebuild:clean": "expo prebuild --clean",
-    "postinstall": "node scripts/patch-bare-kit-config.js",
+    "postinstall": "node scripts/patch-bare-kit-config.js && npm run wdk:bundle",
     "wdk:download-rgb-ln": "bash node_modules/@utexo/rgb-lightning-node-bare/scripts/download-libs.sh",
-    "wdk:bundle": "npm --prefix vendor/pear-wrk-wdk run gen:mobile-bundle",
+    "wdk:bundle": "printf 'n\\n' | wdk-worklet-bundler generate",
     "wdk:link-ios": "node node_modules/react-native-bare-kit/ios/link.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -35,11 +35,15 @@
     "@react-navigation/elements": "2.9.3",
     "@react-navigation/native": "7.1.26",
     "@reduxjs/toolkit": "2.11.2",
+    "@tetherto/pear-wrk-wdk": "file:packages/pear-wrk-wdk-bundle-shim",
+    "@tetherto/pear-wrk-wdk-base": "npm:@tetherto/pear-wrk-wdk@1.0.0-beta.8",
+    "@tetherto/wdk": "1.0.0-beta.4",
     "@tetherto/wdk-pricing-bitfinex-http": "^1.0.0-beta.1",
     "@tetherto/wdk-pricing-provider": "^1.0.0-beta.1",
-    "@tetherto/pear-wrk-wdk": "file:vendor/pear-wrk-wdk",
     "@tetherto/wdk-react-native-core": "github:tetherto/wdk-react-native-core#0b2be6eb5eed5b039cb1083441c3ae0e653fd02d",
     "@tetherto/wdk-uikit-react-native": "^1.0.0-beta.2",
+    "@tetherto/wdk-wallet-evm-erc-4337": "github:itsdeka/wdk-wallet-evm-erc-4337-1#fix/temp-relay-kit",
+    "@tetherto/wdk-wallet-spark": "1.0.0-beta.6",
     "@utexo/rgb-lightning-node-bare": "0.1.0-beta.13",
     "@utexo/wdk-rgb-lightning": "0.1.0-beta.14",
     "b4a": "1.7.3",
@@ -112,9 +116,11 @@
     "sodium-universal": "5.0.1",
     "sonner-native": "0.21.2",
     "stream-browserify": "3.0.0",
-    "stream-http": "3.2.0"
+    "stream-http": "3.2.0",
+    "utf-8-validate": "^5.0.10"
   },
   "devDependencies": {
+    "@tetherto/wdk-worklet-bundler": "1.0.0-beta.3",
     "@types/b4a": "1.6.5",
     "@types/jest": "29.5.14",
     "@types/react": "19.1.0",
@@ -133,6 +139,6 @@
     "react-native": "0.81.4"
   },
   "overrides": {
-    "@tetherto/pear-wrk-wdk": "file:vendor/pear-wrk-wdk"
+    "@tetherto/pear-wrk-wdk": "file:packages/pear-wrk-wdk-bundle-shim"
   }
 }

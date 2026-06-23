@@ -3,6 +3,8 @@ node_modules/
 
 # Expo
 .expo/
+.wdk/
+.wdk-bundle/
 dist/
 web-build/
 expo-env.d.ts
