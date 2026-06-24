@@ -1,6 +1,20 @@
-import avatarOptions, { setAvatar } from '@/config/avatar-options';
+// Copyright 2024 Tether Operations Limited
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import avatarOptions, { setAvatar, setWalletName as saveWalletName } from '@/config/avatar-options';
 import { CommonActions, useNavigation } from '@react-navigation/native';
-import { useWallet } from '@tetherto/wdk-react-native-provider';
+import { useWalletManager } from '@tetherto/wdk-react-native-core';
 import { useLocalSearchParams } from 'expo-router';
 import { useDebouncedNavigation } from '@/hooks/use-debounced-navigation';
 import { ChevronLeft } from 'lucide-react-native';
@@ -26,12 +40,11 @@ export default function ImportNameWalletScreen() {
   const navigation = useNavigation();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-  const { createWallet } = useWallet();
+  const { initializeFromMnemonic } = useWalletManager();
   const [walletName, setWalletName] = useState('');
   const [selectedAvatar, setSelectedAvatar] = useState(avatarOptions[0]);
   const [isImporting, setIsImporting] = useState(false);
 
-  // Get the seed phrase from navigation params
   const seedPhrase = params.seedPhrase ? decodeURIComponent(params.seedPhrase as string) : '';
 
   const handleNext = async () => {
@@ -43,9 +56,9 @@ export default function ImportNameWalletScreen() {
     setIsImporting(true);
 
     try {
-      // Use the context's createWallet method which handles everything including unlocking
-      await createWallet({ name: walletName, mnemonic: seedPhrase });
+      await initializeFromMnemonic(seedPhrase, 'default');
       await setAvatar(selectedAvatar.id);
+      await saveWalletName(walletName || 'My Wallet');
 
       toast.success('Your wallet has been imported successfully.');
 

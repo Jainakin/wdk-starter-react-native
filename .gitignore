@@ -3,6 +3,8 @@ node_modules/
 
 # Expo
 .expo/
+.wdk/
+.wdk-bundle/
 dist/
 web-build/
 expo-env.d.ts
@@ -48,4 +50,3 @@ app-example
 
 # E2E tests
 test/apps/
-

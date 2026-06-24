@@ -1,5 +1,91 @@
-const getChainsConfig = () => {
-  return {
+// Copyright 2024 Tether Operations Limited
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import { NetworkMode } from '@/services/network-mode-service';
+import * as FileSystem from 'expo-file-system/legacy';
+
+export type SparkNetworkMode = 'MAINNET' | 'TESTNET' | 'REGTEST';
+export type RgbLightningNetworkMode = 'mainnet' | 'testnet' | 'regtest' | 'signet';
+
+type ChainConfig = {
+  chainId: number;
+  blockchain: string;
+  provider?: string;
+  bundlerUrl?: string;
+  paymasterUrl?: string;
+  paymasterAddress?: string;
+  entryPointAddress?: string;
+  safeModulesVersion?: string;
+  paymasterToken?: { address: string };
+  transferMaxFee?: number;
+  network?: SparkNetworkMode | RgbLightningNetworkMode;
+  dataDir?: string;
+  daemonListeningPort?: number;
+  ldkPeerListeningPort?: number;
+  maxMediaUploadSizeMb?: number;
+  enableVirtualChannelsV0?: boolean;
+  virtualPeerPubkeys?: string[];
+  permissiveSignerPolicy?: boolean;
+};
+
+const MAINNET_CHAINS: string[] = ['ethereum', 'polygon', 'arbitrum', 'spark', 'plasma'];
+const TESTNET_CHAINS: string[] = ['sepolia', 'spark'];
+
+const documentDirectory = FileSystem.documentDirectory?.replace(/^file:\/\//, '') ?? '';
+const appPrivatePath = (name: string) => `${documentDirectory}${name}`;
+const envValue = (fallback: string, ...keys: string[]) => {
+  const env = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+  return keys.map((key) => env[key]).find(Boolean) ?? fallback;
+};
+
+const getChainsConfig = (sparkNetwork: SparkNetworkMode = 'MAINNET', networkMode?: NetworkMode): Record<string, ChainConfig> => {
+  const rgbLightningNetwork = envValue(
+    'regtest',
+    'EXPO_PUBLIC_RGB_LIGHTNING_NETWORK',
+    'EXPO_PUBLIC_RGB_NETWORK'
+  ) as RgbLightningNetworkMode;
+  const allChains: Record<string, ChainConfig> = {
+    sepolia: {
+      chainId: 11155111,
+      blockchain: 'sepolia',
+      provider: 'https://sepolia.gateway.tenderly.co',
+      bundlerUrl: 'https://api.candide.dev/public/v3/sepolia',
+      paymasterUrl: 'https://api.candide.dev/public/v3/sepolia',
+      paymasterAddress: '0x8b1f6cb5d062aa2ce8d581942bbb960420d875ba',
+      entryPointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
+      safeModulesVersion: '0.3.0',
+      paymasterToken: {
+        address: '0xd077a400968890eacc75cdc901f0356c943e4fdb',
+      },
+      transferMaxFee: 500000,
+    },
+    plasma: {
+      chainId: 9745,
+      blockchain: 'plasma',
+      provider: 'https://rpc.plasma.to',
+      bundlerUrl: 'https://api.candide.dev/public/v3/9745',
+      paymasterUrl: 'https://api.candide.dev/public/v3/9745',
+      paymasterAddress: '0x8b1f6cb5d062aa2ce8d581942bbb960420d875ba',
+      entryPointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
+      safeModulesVersion: '0.3.0',
+      transferMaxFee: 100000,
+    },
+    spark: {
+      chainId: 99999,
+      blockchain: 'spark',
+      network: sparkNetwork,
+    },
     ethereum: {
       chainId: 1,
       blockchain: 'ethereum',
@@ -7,13 +93,12 @@ const getChainsConfig = () => {
       bundlerUrl: 'https://api.candide.dev/public/v3/ethereum',
       paymasterUrl: 'https://api.candide.dev/public/v3/ethereum',
       paymasterAddress: '0x8b1f6cb5d062aa2ce8d581942bbb960420d875ba',
-      entrypointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
-      transferMaxFee: 5000000,
-      swapMaxFee: 5000000,
-      bridgeMaxFee: 5000000,
+      entryPointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
+      safeModulesVersion: '0.3.0',
       paymasterToken: {
         address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-      }
+      },
+      transferMaxFee: 100000,
     },
     arbitrum: {
       chainId: 42161,
@@ -22,62 +107,47 @@ const getChainsConfig = () => {
       bundlerUrl: 'https://api.candide.dev/public/v3/arbitrum',
       paymasterUrl: 'https://api.candide.dev/public/v3/arbitrum',
       paymasterAddress: '0x8b1f6cb5d062aa2ce8d581942bbb960420d875ba',
-      entrypointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
-      transferMaxFee: 5000000,
-      swapMaxFee: 5000000,
-      bridgeMaxFee: 5000000,
+      entryPointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
+      safeModulesVersion: '0.3.0',
       paymasterToken: {
         address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
       },
+      transferMaxFee: 100000,
     },
     polygon: {
       chainId: 137,
       blockchain: 'polygon',
-      provider: 'https://1rpc.io/matic',
+      provider: 'https://polygon-rpc.com',
       bundlerUrl: 'https://api.candide.dev/public/v3/polygon',
       paymasterUrl: 'https://api.candide.dev/public/v3/polygon',
       paymasterAddress: '0x8b1f6cb5d062aa2ce8d581942bbb960420d875ba',
-      entrypointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
-      transferMaxFee: 5000000,
-      swapMaxFee: 5000000,
-      bridgeMaxFee: 5000000,
-      paymasterToken: {
-        address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
-      },
+      entryPointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
       safeModulesVersion: '0.3.0',
-    },
-    ton: {
-      tonApiClient: {
-        url: 'https://tonapi.io',
-      },
-      tonClient: {
-        url: 'https://toncenter.com/api/v2/jsonRPC',
-      },
       paymasterToken: {
-        address: 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs',
+        address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
       },
-      transferMaxFee: 1000000000,
+      transferMaxFee: 100000,
     },
-    bitcoin: {
-      host: 'api.ordimint.com',
-      port: 50001,
-    },
-    tron: {
-      chainId: 3448148188,
-      provider: 'https://trongrid.io',
-      gasFreeProvider: 'https://gasfree.io',
-      apiKey: process.env.EXPO_PUBLIC_TRON_API_KEY!,
-      apiSecret: process.env.EXPO_PUBLIC_TRON_API_SECRET!,
-      serviceProvider: 'TKtWbdzEq5ss9vTS9kwRhBp5mXmBfBns3E',
-      verifyingContract: 'THQGuFzL87ZqhxkgqYEryRAd7gqFqL5rdc',
-      transferMaxFee: 10000000,
-      swapMaxFee: 1000000,
-      bridgeMaxFee: 1000000,
-      paymasterToken: {
-        address: 'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf',
-      },
+    'rgb-lightning': {
+      chainId: 100000,
+      blockchain: 'rgb-lightning',
+      network: rgbLightningNetwork,
+      dataDir: appPrivatePath(`rgb-lightning-${rgbLightningNetwork}`),
+      daemonListeningPort: 0,
+      ldkPeerListeningPort: 0,
+      maxMediaUploadSizeMb: 5,
+      permissiveSignerPolicy: true,
     },
   };
+
+  if (!networkMode) {
+    return allChains;
+  }
+
+  const allowedChains = networkMode === 'testnet' ? TESTNET_CHAINS : MAINNET_CHAINS;
+  return Object.fromEntries(
+    Object.entries(allChains).filter(([key]) => allowedChains.includes(key))
+  ) as Record<string, ChainConfig>;
 };
 
 export default getChainsConfig;

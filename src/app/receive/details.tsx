@@ -1,3 +1,17 @@
+// Copyright 2024 Tether Operations Limited
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import { QRCode } from '@tetherto/wdk-uikit-react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useDebouncedNavigation } from '@/hooks/use-debounced-navigation';
@@ -8,16 +22,26 @@ import { Share as RNShare, StyleSheet, Text, TouchableOpacity, View } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
 import { colors } from '@/constants/colors';
+import { networkConfigs, NetworkType } from '@/config/networks';
 
 export default function ReceiveQRCodeScreen() {
   const insets = useSafeAreaInsets();
   const router = useDebouncedNavigation();
   const params = useLocalSearchParams();
 
-  const { tokenName, networkName, address } = params as {
+  const { tokenName, networkName, networkId, address } = params as {
     tokenName: string;
     networkName: string;
+    networkId: string;
     address: string;
+  };
+
+  const getAddressTypeLabel = (): string | null => {
+    const config = networkConfigs[networkId as NetworkType];
+    if (config?.accountType === 'Safe') {
+      return 'Safe Account Address';
+    }
+    return null; // No special label for native addresses
   };
 
   const handleBack = useCallback(() => {
@@ -79,6 +103,9 @@ export default function ReceiveQRCodeScreen() {
         />
 
         <View style={styles.addressSection}>
+          {getAddressTypeLabel() && (
+            <Text style={styles.smartWalletNote}>{getAddressTypeLabel()}</Text>
+          )}
           <View style={styles.addressContainer}>
             <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="middle">
               {address}
@@ -158,6 +185,11 @@ const styles = StyleSheet.create({
   },
   addressSection: {
     alignItems: 'center',
+  },
+  smartWalletNote: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 12,
   },
   addressLabel: {
     fontSize: 16,

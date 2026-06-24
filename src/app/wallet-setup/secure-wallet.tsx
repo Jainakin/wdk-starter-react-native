@@ -1,14 +1,26 @@
+// Copyright 2024 Tether Operations Limited
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import { SeedPhrase } from '@/components/SeedPhrase';
-import { WDKService } from '@tetherto/wdk-react-native-provider';
+import { generateMnemonic } from 'bip39';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams } from 'expo-router';
 import { useDebouncedNavigation } from '@/hooks/use-debounced-navigation';
 import { AlertCircle, ChevronLeft, Copy, Eye, EyeOff } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getUniqueId } from 'react-native-device-info';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import parseWorkletError from '@/utils/parse-worklet-error';
 import { toast } from 'sonner-native';
 import { colors } from '@/constants/colors';
 import getErrorMessage from '@/utils/get-error-message';
@@ -26,16 +38,14 @@ export default function SecureWalletScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Generate mnemonic using WDK on mount
-    generateMnemonic();
+    generateNewMnemonic();
   }, []);
 
-  const generateMnemonic = async () => {
+  const generateNewMnemonic = async () => {
     try {
       setIsGenerating(true);
       setError(null);
-      const prf = await getUniqueId();
-      const mnemonicString = await WDKService.createSeed({ prf });
+      const mnemonicString = generateMnemonic();
 
       if (!mnemonicString) {
         throw new Error('Received empty mnemonic');
@@ -67,7 +77,6 @@ export default function SecureWalletScreen() {
   };
 
   const handleNext = () => {
-    // Pass wallet data to next screen
     router.push({
       pathname: './confirm-phrase',
       params: {
@@ -111,7 +120,7 @@ export default function SecureWalletScreen() {
             </View>
             <TouchableOpacity
               style={styles.retryButton}
-              onPress={generateMnemonic}
+              onPress={generateNewMnemonic}
               disabled={isGenerating}
             >
               <Text style={styles.retryButtonText}>{isGenerating ? 'Generating...' : 'Retry'}</Text>
